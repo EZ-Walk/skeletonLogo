@@ -44,8 +44,8 @@ ArrayList<Grid> grid = new ArrayList();
 ArrayList<Point> allPoints = new ArrayList();
 
 //grid stuff
-int gap = 5;
-int dotSize = 3;
+int gap = 4;
+int dotSize = 2;
 int roundedx;
 int roundedy;
 int gridSpring = 10; //lower number is strong
@@ -57,11 +57,11 @@ float redChannel = 0;
 
 void setup() {
   size(1920, 1080);
-  logo = loadImage("ThinkLabLogo.jpg");
+  logo = loadImage("logo.jpg");
   image(logo, 0, 0);
   
   gravity = new ArrayList<Point>();
-  lines = new IntList();
+  //lines = new IntList();
   kinect = new KinectPV2(this);
   
   makeTable();
@@ -80,31 +80,49 @@ void setup() {
     }
   }
   
-  
   //drawing the hands, hard coded, for now.
 }
 
 void draw() {
   background(0);
+  image(kinect.getDepthMaskImage(), 0, 0);
+  //println(grid.get(100).findX);
   //image(logo, 0, 0);
   //activePixel = logo.get(mouseX, mouseY);
   //redChannel = red(activePixel);
   //println(red(logo.get(mouseX,mouseY)));
-
+  
   //image(kinect.getDepthMaskImage(), 0, 0);
-
+  
   //get the skeletons as an Arraylist of KSkeletons
   
   
   ArrayList<KSkeleton> skeletonArray =  kinect.getSkeletonDepthMap();
-
+  println(skeletonArray.size() + " skeletons detected and " + gravity.size() + " gravity joints rendered");
   if(skeletonArray.size() != gravity.size() / 3)
   {
-    int counter = 0;
-    while(skeletonArray.size() > gravity.size() / 3)
-      for(int i = 0; i < 3; i++) gravity.add( new Point(new PVector(width/4, height/4), 20, 5000) );
-    while(skeletonArray.size() > gravity.size() / 3)
-      for(int i = 0; i < 3; i++) gravity.remove(gravity.size()-1);
+    if(skeletonArray.size() == 0)
+    {
+      gravity = new ArrayList<Point>();
+    }
+    else
+    {
+      println("imbalance");
+      while(skeletonArray.size() > gravity.size() / 3)
+        for(int i = 0; i < 3; i++)
+        {
+          gravity.add( new Point(new PVector(width/4, height/4), 20, 10000) );
+          println("Creating Joint");
+        }
+      while(skeletonArray.size() < gravity.size() / 3)
+        for(int i = 0; i < 3; i++)
+        {
+          println("Deleting joint");
+          gravity.get(0).Die();
+          gravity.remove(0);
+          
+        }
+    }
   }
 
   //individual joints
@@ -114,12 +132,29 @@ void draw() {
     if (skeleton.isTracked()) {
       KJoint[] joints = skeleton.getJoints();
 
+      //color col  = skeleton.getIndexColor();
+      //fill(col);
+      //stroke(col);
+
       drawBody(joints);
       int index = i * 3;
-      drawHandState(joints[KinectPV2.JointType_HandRight], gravity.get(index));
-      drawHandState(joints[KinectPV2.JointType_HandLeft], gravity.get(index + 1));
-      drawHandState(joints[KinectPV2.JointType_Head], gravity.get(index + 2));
-     }
+      if(index + 2 < gravity.size())
+      {
+        drawHandState(joints[KinectPV2.JointType_HandRight], gravity.get(index));
+        drawHandState(joints[KinectPV2.JointType_HandLeft], gravity.get(index + 1));
+        drawHandState(joints[KinectPV2.JointType_Head], gravity.get(index + 2));
+      }
+      //if(drawing)
+      //{
+      //  line[0] = (int)joints[KinectPV2.JointType_HandRight].getX();
+      //  line[1] = (int)joints[KinectPV2.JointType_HandRight].getY();
+      //  addToLines();
+      //  line[2] = (int)joints[KinectPV2.JointType_HandRight].getX();
+      //  line[3] = (int)joints[KinectPV2.JointType_HandRight].getY();
+      //  stroke(255);
+      //}
+      //drawLines();
+    }
   }
   
   for (Grid gridItem : grid) {
@@ -130,6 +165,7 @@ void draw() {
 
   fill(255, 0, 0);
   text(frameRate, 50, 50);
+  fill(0);
   
   
 }
@@ -155,18 +191,18 @@ void addToLines()
 
 //draw the body
 void drawBody(KJoint[] joints) {
-  drawBone(joints, KinectPV2.JointType_Head, KinectPV2.JointType_SpineShoulder);
-  drawBone(joints, KinectPV2.JointType_SpineShoulder, KinectPV2.JointType_SpineBase);
-  drawBone(joints, KinectPV2.JointType_SpineShoulder, KinectPV2.JointType_ShoulderRight);
-  drawBone(joints, KinectPV2.JointType_SpineShoulder, KinectPV2.JointType_ShoulderLeft);
+  //drawBone(joints, KinectPV2.JointType_Head, KinectPV2.JointType_SpineShoulder);
+  //drawBone(joints, KinectPV2.JointType_SpineShoulder, KinectPV2.JointType_SpineBase);
+  //drawBone(joints, KinectPV2.JointType_SpineShoulder, KinectPV2.JointType_ShoulderRight);
+  //drawBone(joints, KinectPV2.JointType_SpineShoulder, KinectPV2.JointType_ShoulderLeft);
 
-  // Right Arm
-  drawBone(joints, KinectPV2.JointType_ShoulderRight, KinectPV2.JointType_ElbowRight);
-  drawBone(joints, KinectPV2.JointType_ElbowRight, KinectPV2.JointType_HandRight);
+  //// Right Arm
+  //drawBone(joints, KinectPV2.JointType_ShoulderRight, KinectPV2.JointType_ElbowRight);
+  //drawBone(joints, KinectPV2.JointType_ElbowRight, KinectPV2.JointType_HandRight);
 
-  // Left Arm
-  drawBone(joints, KinectPV2.JointType_ShoulderLeft, KinectPV2.JointType_ElbowLeft);
-  drawBone(joints, KinectPV2.JointType_ElbowLeft, KinectPV2.JointType_HandLeft);
+  //// Left Arm
+  //drawBone(joints, KinectPV2.JointType_ShoulderLeft, KinectPV2.JointType_ElbowLeft);
+  //drawBone(joints, KinectPV2.JointType_ElbowLeft, KinectPV2.JointType_HandLeft);
 
   /*// Right Leg
   drawBone(joints, KinectPV2.JointType_Spine_Base, KinectPV2.JointType_FootRight);
@@ -223,16 +259,16 @@ void drawJoint(KJoint[] joints, int jointType) {
   arrayCounter++;
   //println(joints[jointType].getX());
   //println(joints[jointType].getY());
-  ellipse(0, 0, 25, 25);
+  //ellipse(0, 0, 25, 25);
   popMatrix();
 }
 
-//draw a bone from two joints
+//draw a bone from two joints, not using
 void drawBone(KJoint[] joints, int jointType1, int jointType2) {
   pushMatrix();
   translate(joints[jointType1].getX()*multiplyX, joints[jointType1].getY()*multiplyY);
-  ellipse(0, 0, 25, 25);
-  fill(0,0,0);
+  //ellipse(0, 0, 25, 25);
+  //fill(0,0,0);
   popMatrix();
   line(joints[jointType1].getX()*multiplyX, joints[jointType1].getY()*multiplyY, joints[jointType2].getX()*multiplyX, joints[jointType2].getY()*multiplyY);
 }
@@ -245,8 +281,8 @@ void drawHandState(KJoint joint, Point object)
   handState(joint.getState(), object);
   pushMatrix();
   translate(joint.getX()*multiplyX, joint.getY()*multiplyY);
-  ellipse(0, 0, 70, 70);
-  fill(0,0,0);
+  //ellipse(0, 0, 70, 70);
+  //fill(0,0,0);
   object.newPos(joint.getX()*multiplyX, joint.getY() * multiplyY);
   popMatrix();
 }
@@ -264,14 +300,16 @@ void handState(int handState, Point obj) {
   switch(handState) {
   case KinectPV2.HandState_Open:
     fill(0, 0, 0);
-    obj.changeMass(5000);
+    //obj.changeMass(5000);
     //drawing = false;
     break;
   case KinectPV2.HandState_Closed:
     fill(0, 0, 0);
-    obj.changeMass(10000);
+    //obj.changeMass(10000);
     //drawing = true;
-    saveTable(tracker, "data/coords.csv");
+    //ellipse(5, 5, 5, 5);
+    //saveTable(tracker, "data/coords.csv");
+    //println("Table saved at " + hour() + ":" + minute() + ":" + second() + ".");
     break;
   case KinectPV2.HandState_Lasso:
     fill(0, 0, 0);
